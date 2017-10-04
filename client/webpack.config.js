@@ -5,19 +5,30 @@
 const webpack = require('webpack');
 const pathLib = require('path');
 
+const webpackConfigLoader = require('react-on-rails/webpackConfigLoader');
+const configPath = pathLib.resolve('..', 'config');
+const { output, settings } = webpackConfigLoader(configPath);
+const hmr = settings.dev_server.hmr;
+
+const ManifestPlugin = require('webpack-manifest-plugin');
+
 const devBuild = process.env.NODE_ENV !== 'production';
 
 const config = {
-  entry: [
+  entry: {
+    "hello-world-bundle": [
     'es5-shim/es5-shim',
     'es5-shim/es5-sham',
     'babel-polyfill',
     './app/bundles/HelloWorld/startup/registration',
-  ],
+    ]
+  },
 
   output: {
-    filename: 'webpack-bundle.js',
-    path: pathLib.resolve(__dirname, '../app/assets/webpack'),
+    filename: '[name]-[chunkhash].js',
+    chunkFilename: '[name]-[chunkhash].chunk.js',
+    publicPath: output.publicPath,
+    path: output.path,
   },
 
   resolve: {
@@ -25,6 +36,10 @@ const config = {
   },
   plugins: [
     new webpack.EnvironmentPlugin({ NODE_ENV: 'development' }),
+    new ManifestPlugin({
+      publicPath: output.publicPath,
+      writeToFileEmit: true,
+    }),
   ],
   module: {
     rules: [
